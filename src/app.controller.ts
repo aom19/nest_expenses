@@ -1,6 +1,7 @@
-import { Controller, Get,Post, Put,Delete, Param,Body } from '@nestjs/common';
+import { Controller, Get,Post, Put,Delete, Param,Body, ParseIntPipe } from '@nestjs/common';
 import { AppService } from './app.service';
 import {data,IData,IReport,ReportType} from './data'
+import {CreateReportDto,ReportResponseDto,UpdateReportDto} from './dto/report.dto'
 
 
 @Controller('report/:type')
@@ -8,57 +9,34 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  getAllReports(@Param('type') type:ReportType): IData['report']{
-    return data.report.filter(report => report.type === type)
+  getAllReports(@Param('type') type:ReportType): ReportResponseDto[]{
+    return this.appService.getAllReports(type)
+
   }
 
 
 
   @Get(':id')
-  getReport(@Param('id') id:string , @Param('type') type:ReportType): IReport{
-    return data.report.filter(report => report.type === type).find(report => report.id === id)
+  getReport(@Param('id', ParseIntPipe) id:string , @Param('type') type:ReportType): ReportResponseDto{
+    return this.appService.getReport(id,type)
   }
 
 
   @Post()
-  createReport(@Body() body:{source:string,amount:number} , @Param('type') type:ReportType){
-    const report:IReport = {
-      id:Math.random().toString(),
-      source:body.source,
-      amount:body.amount,
-      created_at:new Date(),
-      updated_at:new Date(),
-      type:type
-    }
-    data.report.push(report)
-    return report
+  createReport(@Body() body:CreateReportDto , @Param('type') type:ReportType):ReportResponseDto{
+      return this.appService.createReport(body,type)
   }
 
-
-    
-  
-
   @Put(':id')
-  updateReport(@Body() body:{source:string,amount:number} , @Param('id') id:string , @Param('type') type:ReportType){
-    const report = data.report.filter(report => report.type === type).find(report => report.id === id)
-    
-    report.source = body.source
-    report.amount = body.amount
-    report.updated_at = new Date()
-    return report
-   
+  updateReport(@Body() body:UpdateReportDto , @Param('id',ParseIntPipe) id:string , @Param('type') type:ReportType):ReportResponseDto{
+    return this.appService.updateReport(body,id,type)
   }
 
   @Delete(':id')
-  deleteReport(@Param('id') id:string , @Param('type') type:ReportType
-  ) {
-    const report = data.report.filter(report => report.type === type).find(report => report.id === id)
-    data.report = data.report.filter(report => report.id !== id)
-    return report
-
+  deleteReport(@Param('id',ParseIntPipe) id:string , @Param('type') type:ReportType
+  ):ReportResponseDto {
+    return this.appService.deleteReport(id,type)
   }
-
-
 
 
 }
